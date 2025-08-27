@@ -1,14 +1,36 @@
 "use client";
 import { useState } from "react";
+import { AuthRepository } from "@/lib/repositories/AuthRepository";
+import { AuthService } from "@/lib/services/AuthService";
 
 const Page = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const authService = new AuthService(new AuthRepository());
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Email:", email, "Password:", password);
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await authService.login(email, password);
+
+      // Save token in localStorage
+      localStorage.setItem("token", res.token);
+
+      alert("Login successful!");
+      // window.location.href = "/products"; // redirect
+    } catch (err) {
+      setError("Login failed");
+    } finally {
+      setLoading(false);
+    }
   };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
@@ -40,22 +62,17 @@ const Page = () => {
             />
           </div>
 
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+
           {/* Button */}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-
-        {/* Extra Links */}
-        <p className="text-sm text-center mt-4">
-          Don’t have an account?{" "}
-          <a href="/register" className="text-blue-600 hover:underline">
-            Register
-          </a>
-        </p>
       </div>
     </div>
   );
